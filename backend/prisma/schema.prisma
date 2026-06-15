@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+// 1. กำหนดแหล่งข้อมูลและตัวสร้าง Client
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../src/generated/prisma"
+  // เวลาใส่ output แล้วมันพัง ตรง prisma.service เหมือนจะหาอะไรไม่เจอ
+  // เลยปล่อย default ไปเลยดีกว่า
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 2. กำหนด Role สำหรับสมาชิกในโปรเจกต์
+enum ProjectRole {
+  OWNER
+  MEMBER
+}
+
+// 3. กำหนดความสำคัญของงาน
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// 4. กำหนดสถานะของงาน
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// -------------------------------------------------------------------
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  password      String
+  name          String?
+  avatarUrl     String?
+  refreshToken  String?         // ใช้เก็บ Refresh Token สำหรับการทำระบบล็อกอินแบบมี Session (ถ้าใช้ JWT แบบไม่เก็บ Session อาจจะไม่ต้องใช้ฟิลด์นี้)
+  status        UserStatus     @default(ACTIVE)
+  // --- ส่วนของ RELATION (ความสัมพันธ์) ---
+  
+  // เชื่อมไปตาราง ProjectMember: เพื่อดูว่า User คนนี้ "สังกัด" อยู่กี่โปรเจกต์
+  // (หนึ่ง User สามารถอยู่ในหลายโปรเจกต์ได้)
+  projects      ProjectMember[] 
+
+  // เชื่อมไปตาราง Task (สาย AssignedUser): 
+  // เป็นลิสต์ของงานทั้งหมดที่ "ถูกมอบหมาย" มาให้ User คนนี้ทำ
+  // ต้องใส่ชื่อ "AssignedUser" ให้ตรงกับฝั่ง Task เพื่อให้ Prisma รู้ว่าเชื่อมเส้นไหน
+  assignedTasks Task[]          @relation("AssignedUser") 
+
+  // เชื่อมไปตาราง Task (สาย CreatedByUser): 
+  // เป็นลิสต์ของงานทั้งหมดที่ User คนนี้ "เป็นคนกดสร้าง" เอง
+  // ต้องใส่ชื่อ "CreatedByUser" เพื่อแยกออกจากงานที่ถูกมอบหมาย
+  createdTasks  Task[]          @relation("CreatedByUser") 
+  
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Project {
+  id            String          @id @default(uuid())
+  name        String
+  description String?
+  
+  // --- ส่วนของ RELATION (ความสัมพันธ์) ---
+  
+  // รายชื่อสมาชิก: เชื่อมไปตารางกลาง (ProjectMember) เพื่อดูว่ามีใครอยู่ในโปรเจกต์นี้บ้าง
+  members     ProjectMember[] 
+
+  // รายการงาน: เชื่อมไปตาราง Task เพื่อดูว่าในโปรเจกต์นี้มีงาน (Task) อะไรบ้าง
+  tasks       Task[]          
+  
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model ProjectMember {
+  id            String          @id @default(uuid())
+  
+  // projectId: คอลัมน์ที่เก็บตัวเลข ID ของโปรเจกต์
+  projectId String
+  // project: ตัวแปรที่ใช้ดึงข้อมูลโปรเจกต์ (Relation) 
+  // fields: [projectId] คือเอาคอลัมน์ข้างบนไปเช็กกับ references: [id] ของตาราง Project
+  // onDelete: Cascade คือ ถ้าลบโปรเจกต์ ให้ลบรายชื่อสมาชิกในนี้ทิ้งด้วยทันที
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // userId: คอลัมน์ที่เก็บตัวเลข ID ของผู้ใช้
+  userId    String
+  // user: ตัวแปรที่ใช้ดึงข้อมูลผู้ใช้ (Relation)
+  // fields: [userId] คือเอาคอลัมน์ข้างบนไปเช็กกับ references: [id] ของตาราง User
+  // onDelete: Cascade คือ ถ้าลบผู้ใช้ ให้ลบรายชื่อสมาชิก
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // บทบาท: ใช้แบ่งว่าใครเป็นเจ้าของ (OWNER) หรือคนช่วยงาน (MEMBER)
+  role      ProjectRole @default(OWNER)
+
+  // ป้องกันการแอด User คนเดิมซ้ำเข้าไปในโปรเจกต์เดิม (Unique Compound Key)
+  // เมื่อเราเขียน @@unique([ฟิลด์ A, ฟิลด์ B]) Prisma จะเข้าใจว่า "สองคอลัมน์นี้ห้ามซ้ำกันนะ" 
+  // และมันจะสร้างชื่อเรียกความสัมพันธ์ชุดนี้ขึ้นมาโดยการเอาชื่อฟิลด์มาต่อกันด้วยขีดล่าง (_) 
+  // กลายเป็น projectId_userId
+  @@unique([projectId, userId]) 
+}
+
+model Task {
+  id            String          @id @default(uuid())
+  title         String
+  description   String?
+  status        TaskStatus   @default(OPEN)
+  priority      TaskPriority @default(MEDIUM)
+  dueDate       DateTime?
+
+  // --- ส่วนของ RELATION (ความสัมพันธ์) ---
+
+  // เชื่อมกับ Project: งานนี้ต้องสังกัดโปรเจกต์ใดโปรเจกต์หนึ่งเสมอ
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // ****มีความสัมพันธ์กับ User อยู่ 2 สาย (สายที่ 1 คือผู้สร้างงาน, สายที่ 2 คือผู้รับผิดชอบงาน) จึงต้องแยกชื่อ relation ออกไปให้ชัดเจนเพื่อไม่ให้สับสน****
+  // สายที่ 1: ผู้สร้างงาน (Creator)
+  // createdById: เก็บ ID คนสร้าง
+  // createdBy: ใช้ดึงข้อมูล User คนสร้าง (ต้องระบุชื่อ relation "CreatedByUser" ให้ตรงกับตาราง User)
+  createdById String
+  createdBy   User         @relation("CreatedByUser", fields: [createdById], references: [id])
+
+  // สายที่ 2: ผู้รับผิดชอบ (Assignee)
+  // assigneeId: เก็บ ID คนรับงาน (ใส่ ? เพราะตอนสร้างงานอาจจะยังไม่ได้มอบหมายให้ใคร)
+  // assignee: ใช้ดึงข้อมูล User คนรับงาน (ต้องระบุชื่อ relation "AssignedUser" ให้ตรงกับตาราง User)
+  assigneeId  String?
+  assignee    User?        @relation("AssignedUser", fields: [assigneeId], references: [id])
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}

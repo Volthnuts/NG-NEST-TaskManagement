@@ -1,0 +1,20 @@
+ใช้สำหรับทำ dto
+npm install class-validator class-transformer
+
+ใช้ในการเชื่อมฐานข้อมูล
+npm install prisma --save-dev
+npm install @prisma/client @prisma/adapter-pg pg
+
+ใช้เรียกค่าใน .env
+npm install @nestjs/config
+
+ใช้ทำ jwt พวก auth
+npm install --save @nestjs/jwt passport-jwt
+npm install --save-dev @types/passport-jwt
+
+ใช้ hash password
+npm i bcrypt
+npm i -D @types/bcrypt
+
+ใช้อัพเดตรูปผู้ใช้
+npm install -D @types/multer
