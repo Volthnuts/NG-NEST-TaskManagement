@@ -1,1 +1,46 @@
 /* You can add global styles to this file, and also import other style files */
+
+/*
+  @import "tailwindcss";
+  ** อันนี้เราใช้ scss ทำให้ extension tailwindIntelliSense ไม่ทำงาน **
+  เราต้องสร้างไฟล์ที่ src/tailwind.css และ
+  @import "tailwindcss"; แทน
+
+  แล้วใน angular.json ตรง style ที่มี "src/styles.scss"
+  ให้เพิ่ม "src/tailwind.css", ที่เราสร้างเมื่อกี้ และลบ import ใน style.scss ออก
+  เพื่อให้ให้เรียกซ้ำซ้อน
+
+  @custom-variant dark (&:where(.dark, .dark *));
+  แล้วก็ย้ายอันนี้ไปอยู่ที่เดียวกันด้วย
+*/
+
+// 1. 'dark' ใน theme.ts เป็นคนไปแปะป้ายชื่อคลาส dark ไว้บนหัวเว็บ (<html class="dark">)
+// 2. dark ใน Custom Variant เป็นคนคอยจับตาดูว่าถ้าหัวเว็บมีคลาส .dark เมื่อไหร่ 
+// จะอนุญาตให้คลาส dark: ใน HTML ทำงาน
+// 3. dark: ใน HTML รอรับคำสั่งจากข้อ 2 เพื่อเปลี่ยนสีตัวเองเป็น dark:bg-slate-500
+
+/* เอาตา build-in จาก browser ออก */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+}
+/* เอาตา build-in จาก browser ออก */
+
+/* เอาตา scrollbar ออก */
+@layer utilities {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+  }
+}
+/* เอาตา scrollbar ออก */

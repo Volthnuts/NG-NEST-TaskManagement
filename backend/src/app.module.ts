@@ -9,8 +9,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { LoggingInterceptor } from './common/interceptors/logging/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform/transform.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -20,6 +21,25 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({ // ใช้ authGuard อยู่แล้วทุกที่เลย global imoport
       global: true,
       secret: process.env.JWT_SECRET,
+    }),
+    // ตั้งค่าระบบส่งอีเมลแบบ Global
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (config: ConfigService) => ({
+        transport: {
+          host: config.get<string>('MAIL_HOST') || 'smtp.gmail.com',
+          port: config.get<number>('MAIL_PORT') || 587,
+          secure: false, // true สำหรับพอร์ต 465, false สำหรับพอร์ตอื่น
+          auth: {
+            user: config.get<string>('MAIL_USER'), // อีเมลผู้ส่ง
+            pass: config.get<string>('MAIL_PASS'), // App Password ของ Gmail
+          },
+        },
+        defaults: {
+          from: `"TaskFlow Support" <${config.get<string>('MAIL_USER')}>`,
+        },
+      }),
+      inject: [ConfigService],
     }),
     TasksModule, 
     AuthModule, 

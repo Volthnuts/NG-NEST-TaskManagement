@@ -39,6 +39,7 @@ enum TaskStatus {
 enum UserStatus {
   ACTIVE
   INACTIVE
+  PENDING
 }
 
 // -------------------------------------------------------------------
@@ -50,7 +51,12 @@ model User {
   name          String?
   avatarUrl     String?
   refreshToken  String?         // ใช้เก็บ Refresh Token สำหรับการทำระบบล็อกอินแบบมี Session (ถ้าใช้ JWT แบบไม่เก็บ Session อาจจะไม่ต้องใช้ฟิลด์นี้)
-  status        UserStatus     @default(ACTIVE)
+  verificationToken String?  // 💡 เก็บ Token สำหรับส่งไปในอีเมล
+  tokenExpiresAt    DateTime? // 💡 เก็บวันหมดอายุของ Token (เช่น ให้เวลา 1 ชั่วโมง)
+  // 2 ฟิลด์นี้สำหรับระบบลืมรหัสผ่าน
+  resetPasswordToken  String?   @unique
+  resetPasswordExpires DateTime?
+  status        UserStatus     @default(PENDING)
   // --- ส่วนของ RELATION (ความสัมพันธ์) ---
   
   // เชื่อมไปตาราง ProjectMember: เพื่อดูว่า User คนนี้ "สังกัด" อยู่กี่โปรเจกต์

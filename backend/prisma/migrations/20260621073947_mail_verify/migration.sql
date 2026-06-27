@@ -8,7 +8,7 @@ CREATE TYPE "TaskPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
 CREATE TYPE "TaskStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'DONE');
 
 -- CreateEnum
-CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INACTIVE');
+CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'PENDING');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -18,7 +18,9 @@ CREATE TABLE "User" (
     "name" TEXT,
     "avatarUrl" TEXT,
     "refreshToken" TEXT,
-    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
+    "verificationToken" TEXT,
+    "tokenExpiresAt" TIMESTAMP(3),
+    "status" "UserStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

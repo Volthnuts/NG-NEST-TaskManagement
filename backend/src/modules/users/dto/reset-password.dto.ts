@@ -1,6 +1,9 @@
 import { IsNotEmpty, IsString, Matches, MinLength } from "class-validator";
 
-export class UpdatePasswordDto {
+export class ResetPasswordDto {
+    @IsNotEmpty({ message: 'Token cannot be null' })
+    token!: string;
+
     @IsNotEmpty({ message: 'Password cannot be null' })
     @IsString({ message: 'Password must be a string' }) 
     @MinLength(8, { message: 'Password must be at least 8 characters long' })
@@ -11,8 +14,4 @@ export class UpdatePasswordDto {
     @IsNotEmpty({ message: 'Confirm Password cannot be null' })
     @IsString({ message: 'Confirm Password must be a string' })
     confirmPassword!: string;
-
-    @IsNotEmpty({ message: 'Old Password cannot be null' })
-    @IsString({ message: 'Old Password must be a string' })
-    oldPassword!: string;
 }

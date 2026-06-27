@@ -1,0 +1,16 @@
+<button
+    (click)="toggleTheme()"
+    class="fixed bottom-6 right-6 z-50
+    w-12 h-12 rounded-full p-1.5
+    bg-gray-800  dark:bg-yellow-400
+    text-white   dark:text-black
+    flex items-center justify-center
+    cursor-pointer hover:scale-110 active:scale-95">
+
+    <ng-icon
+        [name]="isDark ? 'heroSun' : 'heroMoon'"
+        style="width: 100%; height: 100%"
+        class="transition-transform duration-400"
+        [ngClass]="{ 'rotate-180': isDark }"
+    ></ng-icon>
+</button>

@@ -1,0 +1,146 @@
+<p>project-task-list works!</p>
+<div class="space-y-6 animate-fade-in">
+  
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-zinc-50">Tasks</h1>
+      <p class="text-sm text-gray-500 dark:text-zinc-400">Manage, track, and assign tasks for this workspace.</p>
+    </div>
+    
+    <button 
+      (click)="openCreateTaskModal()"
+      class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md transition-all active:scale-98 cursor-pointer dark:bg-indigo-500 dark:hover:bg-indigo-600"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      Add Task
+    </button>
+  </div>
+
+  <div class="flex flex-col md:flex-row gap-3 items-center justify-between bg-white dark:bg-zinc-800 p-4 rounded-2xl border border-gray-100 dark:border-zinc-700/50 shadow-sm">
+    <div class="relative w-full md:max-w-xs">
+      <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </span>
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery"
+        placeholder="Search tasks..." 
+        class="w-full pl-9 pr-4 py-2 text-sm rounded-xl border focus:outline-none focus:ring-2 transition-all bg-white text-gray-950 border-gray-200 focus:ring-indigo-500/50 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-indigo-500/50"
+      />
+    </div>
+
+    <div class="flex gap-1.5 overflow-x-auto w-full md:w-auto p-0.5">
+      <button 
+        *ngFor="let option of ['ALL', 'OPEN', 'IN_PROGRESS', 'DONE']"
+        (click)="statusFilter = option"
+        [ngClass]="{
+          'bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold shadow-sm': statusFilter === option,
+          'text-gray-600 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-700/60': statusFilter !== option
+        }"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all uppercase whitespace-nowrap"
+      >
+        {{ option === 'ALL' ? 'All Tasks' : option.replace('_', ' ') }}
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-gray-100 dark:border-zinc-700/50 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-gray-100 dark:border-zinc-700/60 bg-gray-50/50 dark:bg-zinc-800/50 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+            <th class="py-3 px-4 w-12 text-center">Status</th>
+            <th class="py-3 px-4">Task Title</th>
+            <th class="py-3 px-4 w-32">Priority</th>
+            <th class="py-3 px-4 w-40">Due Date</th>
+            <th class="py-3 px-4 w-44">Assignee</th>
+            <th class="py-3 px-4 w-16 text-center"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-zinc-700/40 text-sm">
+          
+          <tr *ngIf="filteredTasks.length === 0">
+            <td colspan="6" class="py-12 text-center text-gray-400 dark:text-zinc-500 font-medium">
+              No tasks found matching your criteria.
+            </td>
+          </tr>
+
+          <tr *ngFor="let task of filteredTasks" class="group hover:bg-gray-50/40 dark:hover:bg-zinc-700/10 transition-colors">
+            
+            <td class="py-4 px-4 text-center">
+              <span [ngClass]="{
+                'text-gray-400 dark:text-zinc-600': task.status === 'OPEN',
+                'text-indigo-500 animate-pulse': task.status === 'IN_PROGRESS',
+                'text-emerald-500': task.status === 'DONE'
+              }">
+                <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle *ngIf="task.status === 'OPEN'" cx="12" cy="12" r="9" stroke-width="2"></circle>
+                  <path *ngIf="task.status === 'IN_PROGRESS'" stroke-width="2" d="M12 3v18M3 12h18M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  <path *ngIf="task.status === 'DONE'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </span>
+            </td>
+
+            <td class="py-4 px-4">
+              <div class="font-semibold text-gray-800 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" [ngClass]="{'line-through !text-gray-400 dark:!text-zinc-500 font-normal': task.status === 'DONE'}">
+                {{ task.title }}
+              </div>
+              <div class="text-xs text-gray-400 dark:text-zinc-500 line-clamp-1 mt-0.5 max-w-md" [ngClass]="{'line-through': task.status === 'DONE'}">
+                {{ task.description || 'No description provided.' }}
+              </div>
+            </td>
+
+            <td class="py-4 px-4">
+              <span [ngClass]="{
+                'bg-gray-100 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300': task.priority === 'LOW',
+                'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400': task.priority === 'MEDIUM',
+                'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400': task.priority === 'HIGH',
+                'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 font-bold': task.priority === 'URGENT'
+              }" class="text-[11px] px-2 py-0.5 rounded-md font-medium tracking-wide uppercase">
+                {{ task.priority }}
+              </span>
+            </td>
+
+            <td class="py-4 px-4 text-gray-500 dark:text-zinc-400 text-xs font-mono">
+              {{ task.dueDate ? (task.dueDate | date:'mediumDate') : 'No due date' }}
+            </td>
+
+            <td class="py-4 px-4">
+              <div class="flex items-center gap-2" *ngIf="task.assignee; else unassigned">
+                <div class="h-6 w-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30">
+                  {{ task.assignee.name.charAt(0) }}
+                </div>
+                <span class="text-xs font-medium text-gray-600 dark:text-zinc-300">{{ task.assignee.name }}</span>
+              </div>
+              <ng-template #unassigned>
+                <span class="text-xs text-gray-400 dark:text-zinc-600 italic">Unassigned</span>
+              </ng-template>
+            </td>
+
+            <td class="py-4 px-4 text-center">
+              <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button (click)="editTask(task.id)" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                  </svg>
+                </button>
+                <button (click)="deleteTask(task.id)" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-400 hover:text-red-500 dark:hover:text-red-400 cursor-pointer transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

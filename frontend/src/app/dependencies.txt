@@ -1,0 +1,6 @@
+ติดตั้ง tailwind
+npm install tailwindcss @tailwindcss/postcss postcss --force
+ทำตามไกด์ => https://tailwindcss.com/docs/installation/framework-guides/angular
+
+ใช้ heroicons
+npm install @ng-icons/core @ng-icons/heroicons

@@ -18,3 +18,11 @@ npm i -D @types/bcrypt
 
 ใช้อัพเดตรูปผู้ใช้
 npm install -D @types/multer
+
+อ่าน cookie เก็บ jwt token บน cookie แทน localStorage
+npm i cookie-parser
+npm i --save-dev @types/cookie-parser
+
+ยืนยันตัวตนผ่านเมลล์
+npm i @nestjs-modules/mailer nodemailer
+npm i --save-dev @types/nodemailer

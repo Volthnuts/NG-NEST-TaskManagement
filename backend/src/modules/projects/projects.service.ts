@@ -47,20 +47,33 @@ export class ProjectsService {
   async getAllProjects(userId: string) {
     const projects = await this.prisma.project.findMany({
       where: {
-        members: { // members คือชื่อ relation ที่เชื่อมตาราง project กับ projectMember
-          some: { // some คือเงื่อนไขที่ต้องการให้มีอย่างน้อย 1 แถวในตาราง projectMember ที่เชื่อมโยงกับโปรเจกต์นี้
+        members: {
+          some: {
             userId: userId
           }
         }
       },
-      // แถมข้อมูลบทบาทของเราในโปรเจกต์นั้นกลับไปด้วย
-      include: {
+      // 💡 เปลี่ยนจาก include มารวบทุกอย่างไว้ใน select ระดับนอกสุดแทน
+      select: {
+        id: true,         // ระบุฟิลด์ของ Project ที่ต้องการเอาไปใช้บนหน้า UI
+        name: true,
+        description: true, // (ถ้ามี)
+        createdAt: true,   // (ถ้ามี)
+
+        // 1. แถมข้อมูลบทบาทเฉพาะของเราในโปรเจกต์นั้น
         members: {
           where: {
-            userId: userId // ดึงมาเฉพาะแถวที่เป็นของเราคนเดียวพอ ไม่ต้องดึงเพื่อนร่วมทีมทั้งหมด
+            userId: userId 
           },
           select: {
-            role: true // เอาแค่ฟิลด์ role (OWNER/MEMBER)
+            role: true 
+          }
+        },
+
+        // 2. สั่งนับจำนวนสมาชิกทั้งหมดในโปรเจกต์ (ย้ายมาอยู่ในแนวระนาบ select นี้ได้เลย)
+        _count: {
+          select: {
+            members: true 
           }
         }
       }

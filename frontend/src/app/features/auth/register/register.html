@@ -1,0 +1,91 @@
+<div class="w-full max-w-xl p-10 rounded-2xl shadow-xl transition-colors duration-300
+            bg-white dark:bg-zinc-800">
+  
+  <h2 class="text-3xl font-extrabold text-center mb-8
+             text-gray-900 dark:text-zinc-50">
+    Create your account
+  </h2>
+
+  <form class="space-y-5">
+    
+    <div>
+      <label class="block text-sm font-medium mb-1.5
+                    text-gray-600 dark:text-zinc-400">
+        Full Name
+      </label>
+      <input type="text" 
+             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all
+                    bg-white text-gray-950 border-gray-300 focus:ring-blue-500
+                    dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
+             placeholder="John Doe" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1.5
+                    text-gray-600 dark:text-zinc-400">
+        Email address
+      </label>
+      <input type="email" 
+             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all
+                    bg-white text-gray-950 border-gray-300 focus:ring-blue-500
+                    dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
+             placeholder="you@example.com" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1.5
+                    text-gray-600 dark:text-zinc-400">
+        Password
+      </label>
+      <input type="password" 
+             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all
+                    bg-white text-gray-950 border-gray-300 focus:ring-blue-500
+                    dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
+             placeholder="••••••••" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1.5
+                    text-gray-600 dark:text-zinc-400">
+        Confirm Password
+      </label>
+      <input type="password" 
+             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all
+                    bg-white text-gray-950 border-gray-300 focus:ring-blue-500
+                    dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
+             placeholder="••••••••" />
+    </div>
+
+    <div class="flex items-start text-sm">
+      <div class="flex items-center h-5">
+        <input id="terms" 
+               name="terms" 
+               type="checkbox" 
+               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer
+                      dark:border-zinc-600 dark:bg-zinc-900 dark:focus:ring-indigo-500">
+      </div>
+      <label for="terms" 
+             class="ml-2 block text-gray-600 dark:text-zinc-400 cursor-pointer select-none">
+        I agree to the <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Terms of Service</a> and <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Privacy Policy</a>
+      </label>
+    </div>
+
+    <button type="submit" 
+            class="w-full py-3 px-4 rounded-lg font-semibold text-white cursor-pointer transition-all duration-150 active:scale-98 shadow-md mt-2
+                   bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200
+                   dark:bg-indigo-500 dark:hover:bg-indigo-600 dark:hover:shadow-none">
+      Create Account
+    </button>
+
+    <div class="text-center pt-2">
+      <p class="text-sm text-gray-500 dark:text-zinc-400">
+        Already have an account? 
+        <a routerLink="/login" 
+           class="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors ml-1">
+          Sign In here
+        </a>
+      </p>
+    </div>
+
+  </form>
+</div>

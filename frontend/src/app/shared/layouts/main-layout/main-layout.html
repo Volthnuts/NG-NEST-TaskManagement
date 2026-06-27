@@ -1,0 +1,95 @@
+<div class="min-h-screen bg-gray-50 dark:bg-zinc-900 transition-colors duration-300">
+  
+  <nav class="sticky top-0 z-40 w-full bg-white dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700/60 px-4 lg:px-6 py-3 shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <div class="flex items-center gap-4 relative">
+        <span class="text-xl font-black text-indigo-600 dark:text-indigo-400 select-none tracking-wider">
+          PJM.
+        </span>
+        
+        <div class="h-5 w-px bg-gray-300 dark:bg-zinc-600"></div>
+
+        <div class="relative">
+          <button 
+            (click)="toggleProjectDropdown()"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-700/60 cursor-pointer transition-colors text-left max-w-[220px] sm:max-w-xs"
+          >
+            <div class="h-6 w-6 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center justify-center flex-shrink-0">
+              {{ currentProject.name.charAt(0) }}
+            </div>
+            <span class="text-sm font-semibold text-gray-800 dark:text-zinc-100 truncate">
+              {{ currentProject.name }}
+            </span>
+            <svg class="w-4 h-4 text-gray-400 dark:text-zinc-500 flex-shrink-0 transition-transform duration-200" [ngClass]="{'rotate-180': isProjectDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <div 
+            *ngIf="isProjectDropdownOpen"
+            class="absolute left-0 mt-2 w-72 rounded-xl bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 shadow-xl py-2 z-50 transform origin-top-left transition-all"
+          >
+            <div class="fixed inset-0 z-[-1]" (click)="closeProjectDropdown()"></div>
+
+            <div class="px-3 py-1 mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">Switch Workspace</span>
+            </div>
+
+            <div class="max-h-60 overflow-y-auto space-y-0.5">
+              <div 
+                *ngFor="let proj of projects"
+                (click)="switchProject(proj)"
+                [ngClass]="{'bg-indigo-50/50 dark:bg-indigo-500/5': proj.id === currentProject.id}"
+                class="group flex items-center justify-between px-3 py-2 mx-1 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700/40 cursor-pointer transition-colors"
+              >
+                <div class="flex items-center gap-2.5 min-w-0 pr-2">
+                  <div class="h-5 w-5 rounded bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-400 text-xs font-bold flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                    {{ proj.name.charAt(0) }}
+                  </div>
+                  <span class="text-sm font-medium text-gray-700 dark:text-zinc-300 truncate" [ngClass]="{'font-bold text-indigo-600 dark:text-indigo-400': proj.id === currentProject.id}">
+                    {{ proj.name }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <button (click)="viewMembers(proj.id, $event)" title="Members" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 text-gray-500 dark:text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                  </button>
+                  <button (click)="editProject(proj.id, $event)" title="Edit project" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 text-gray-500 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                  </button>
+                  <button (click)="deleteProject(proj.id, $event)" title="Delete project" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 text-gray-400 hover:text-red-500 dark:hover:text-red-400 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button class="h-9 w-9 rounded-full bg-gray-200 dark:bg-zinc-700 border-2 border-indigo-500 cursor-pointer overflow-hidden transition-transform active:scale-95 flex items-center justify-center">
+          <svg class="w-5 h-5 text-gray-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto p-4 lg:p-8">
+    <router-outlet />
+  </main>
+
+</div>

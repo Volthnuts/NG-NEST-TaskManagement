@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth/jwt-auth.guard';
 import type { RequestWithUser } from 'src/common/interfaces/request-with-user/request-with-user.interface';
-import { UpdatePasswordDto } from './dto/update-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { LocalFilesInterceptor } from 'src/common/interceptors/local-file-images/local-file-images.interceptor';
 import { Multer } from 'multer';
 
@@ -48,9 +48,17 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('my-password')
-  changePassword(@Req() request: RequestWithUser, @Body() updatePasswordDto: UpdatePasswordDto) {
-    return this.usersService.changePassword(request.user.userId, updatePasswordDto);
+  // ช่องทางรับอีเมลเพื่อยิงลิงก์กู้ภัย
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    return this.usersService.forgotPassword(email);
+  }
+
+  // ช่องทางรับรหัสผ่านใหม่พ่วง Token จากหน้าบ้านมาบันทึก
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    // แนะนำสร้าง ResetPasswordDto เพิ่มเติม: { token, newPassword, confirmPassword }
+    return this.usersService.resetPassword(resetPasswordDto);
   }
 
   @UseGuards(JwtAuthGuard)
