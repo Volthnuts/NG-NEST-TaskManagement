@@ -15,10 +15,12 @@ export const jwtInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, nex
 
   return next(credentialReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // 💡 ดักจับ 401 Unauthorized (แปลว่า Access Token น่าจะหมดอายุแล้ว)
-      if (error.status === 401 && !req.url.includes('/auth/refresh')) {
-        return handle401Error(credentialReq, next, authService);
-      }
+      // ดักจับ 401 Unauthorized (แปลว่า Access Token น่าจะหมดอายุแล้ว)
+    if (error.status === 401 && 
+        !req.url.includes('/auth/refreshToken') && 
+        !req.url.includes('/auth/logout')) { 
+      return handle401Error(credentialReq, next, authService);
+    }
       return throwError(() => error);
     })
   );
@@ -30,7 +32,7 @@ function handle401Error(request: HttpRequest<any>, next: HttpHandlerFn, authServ
     isRefreshing = true;
     refreshTokenSubject.next(null);
 
-    // ⚡ ยิงไป Endpoint Refresh หลังบ้าน เพื่อให้หลังบ้านเขียน Cookie AT ใบใหม่มาให้
+    // ยิงไป Endpoint Refresh หลังบ้าน เพื่อให้หลังบ้านเขียน Cookie AT ใบใหม่มาให้
     return authService.refreshTokens().pipe(
       switchMap((res: any) => {
         isRefreshing = false;

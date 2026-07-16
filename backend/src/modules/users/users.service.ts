@@ -182,25 +182,89 @@ export class UsersService {
     return deletedUser;
   }
 
-  async forgotPassword(email: string) {
-    // ค้นหาผู้ใช้ (ต้องเป็นคนที่ ACTIVE แล้วเท่านั้น)
+  async forgotPassword(email: string, resetUrl: string) {
+  // ค้นหาผู้ใช้
+  const user = await this.prisma.user.findFirst({
+    where: { email, status: 'ACTIVE' }
+  });
+
+  // ถ้าไม่เจอยูสเซอร์ ให้ดีดตอบกลับหน้าบ้านทันทีแบบไม่ค้าง!
+  if (!user) {
+    return { 
+      message: 'If this email exists in our system, a password reset link has been sent successfully.' 
+    };
+  }
+
+  // ถ้าเจอยูสเซอร์ ค่อยขยับมาทำลอจิกส่งเมลในบล็อก try-catch
+  try {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: resetToken,
+        resetPasswordExpires: expiresAt
+      }
+    });
+
+    const resetUrlWithToken = `${resetUrl}?token=${resetToken}`;
+
+    // บรรทัดนี้ตัวดี! ลองใส่ console.log ดักไว้ดูว่ามันติดหล่มที่นี่ไหม
+    console.log('--- กำลังจะเริ่มส่งอีเมล ---');
+
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Reset Your Password for TaskFlow',
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+            <h2>Password Reset Request</h2>
+            <p>We received a request to reset your password. Please click the button below to set up a new password (this link will expire in 15 minutes):</p>
+            
+            <div style="margin: 25px 0;">
+              <a href="${resetUrlWithToken}" style="background-color: #e11d48; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                Reset Password Here
+              </a>
+            </div>
+            
+            <p style="font-size: 12px; color: #666; margin-top: 20px;">If you did not request this password reset, you can safely ignore this email. Your current password remains secure.</p>
+          </div>
+        `
+      });
+
+      console.log('--- ส่งอีเมลสำเร็จแล้ว ---');
+
+      return { 
+        message: 'If this email exists in our system, a password reset link has been sent successfully.' 
+      };
+
+    } catch (error) {
+      // พิมพ์ดูตรงนี้เลยครับว่าระบบเมลพังเพราะอะไร (เช่น ต่อ SMTP ไม่ติด)
+      console.error('Mailer error detail:', error); 
+      throw new InternalServerErrorException('Failed to process forgot password');
+    }
+  }
+
+  async changePassword(email: string, resetUrl: string) {
+    // ค้นหาผู้ใช้
     const user = await this.prisma.user.findFirst({
       where: { email, status: 'ACTIVE' }
     });
 
-    // Security Trick: หากไม่พบผู้ใช้ เพื่อความปลอดภัยไม่ควรบอกแฮกเกอร์ว่า "ไม่มีอีเมลนี้" 
-    // ให้ส่งข้อความลวงกลับไปว่าสำเร็จเหมือนกัน แต่เบื้องหลังไม่มีการส่งอีเมลจริง
+    // ถ้าไม่เจอยูสเซอร์ ให้ดีดตอบกลับหน้าบ้านทันทีแบบไม่ค้าง!
     if (!user) {
-      return { message: 'Link for reset password has been sent.' };
+      return { 
+        message: 'If this email exists in our system, a password change link has been sent successfully.' 
+      };
     }
 
+    // ถ้าเจอยูสเซอร์ ค่อยขยับมาทำลอจิกส่งเมลในบล็อก try-catch
     try {
-      // สร้าง Reset Token ความยาว 32 บิต
       const resetToken = crypto.randomBytes(32).toString('hex');
       const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 15); // ⏰ ปลอดภัยสูง ให้เวลาแค่ 15 นาทีพอ
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
-      // บันทึก Token ลงหลุมฐานข้อมูล
       await this.prisma.user.update({
         where: { id: user.id },
         data: {
@@ -209,30 +273,39 @@ export class UsersService {
         }
       });
 
-      // ส่งอีเมลหาผู้ใช้ (คราวนี้ลิงก์ต้องวิ่งไปหาหน้าบ้าน Angular พอร์ต 4200!)
-      const resetUrl = `http://localhost:4200/reset-password?token=${resetToken}`;
+      const resetUrlWithToken = `${resetUrl}?token=${resetToken}`;
+
+      console.log('--- กำลังจะเริ่มส่งอีเมล ---');
 
       await this.mailerService.sendMail({
         to: user.email,
-        subject: '💡 รีเซ็ตรหัสผ่านของคุณสำหรับ TaskFlow',
+        subject: 'Change Your Password for TaskFlow', 
         html: `
-          <div style="font-family: sans-serif; padding: 20px; color: #333;">
-            <h2>คำขอกู้คืนรหัสผ่าน</h2>
-            <p>คุณได้ทำการร้องขอบิตกู้รหัสผ่านใหม่ กรุณาคลิกปุ่มด้านล่างเพื่อตั้งรหัสผ่านใหม่ (ลิงก์นี้มีอายุ 15 นาที):</p>
-            <div style="margin: 20px 0;">
-              <a href="${resetUrl}" style="background-color: #e11d48; color: white; padding: 12px 24px; text-decoration: none; rounded: 8px; font-weight: bold;">
-                🔑 ตั้งรหัสผ่านใหม่ที่นี่
+          <div style="font-family: sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+            <h2>Password Change Request</h2> 
+            <p>We received a request to change your password. Please click the button below to set up your new password (this link will expire in 15 minutes):</p>
+            
+            <div style="margin: 25px 0;">
+              <a href="${resetUrlWithToken}" style="background-color: #e11d48; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                Change Password Here
               </a>
             </div>
-            <p style="font-size: 12px; color: #666;">หากคุณไม่ได้เป็นคนส่งคำขอนี้ สามารถปล่อยเบลออีเมลฉบับนี้ไปได้เลย รหัสผ่านเดิมของคุณยังคงปลอดภัย</p>
+            
+            <p style="font-size: 12px; color: #666; margin-top: 20px;">If you did not request this change, please secure your account or contact support immediately. Your current password remains secure until updated.</p>
           </div>
         `
       });
 
-      return { message: 'หากมีอีเมลนี้ในระบบ ลิงก์รีเซ็ตรหัสผ่านถูกส่งไปเรียบร้อยแล้ว' };
+      console.log('--- ส่งอีเมลสำเร็จแล้ว ---');
+
+      // เปลี่ยนข้อความตอบกลับหน้าบ้าน
+      return { 
+        message: 'If this email exists in our system, a password change link has been sent successfully.' 
+      };
 
     } catch (error) {
-      throw new InternalServerErrorException('Failed to process forgot password');
+      console.error('Mailer error detail:', error); 
+      throw new InternalServerErrorException('Failed to process change password');
     }
   }
 
@@ -253,7 +326,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new BadRequestException('ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้อง หรือหมดอายุไปแล้ว');
+      throw new BadRequestException('Reset link is invalid or expired');
     }
 
     // 2. แฮชรหัสผ่านใหม่เอี่ยมอ่อง

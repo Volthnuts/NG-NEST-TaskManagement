@@ -26,3 +26,7 @@ npm i --save-dev @types/cookie-parser
 ยืนยันตัวตนผ่านเมลล์
 npm i @nestjs-modules/mailer nodemailer
 npm i --save-dev @types/nodemailer
+
+เอาไว้ run seeder
+npm install -D ts-node /x\
+npm install -D tsx

@@ -21,7 +21,7 @@ export class AuthService {
   ) {}
 
   async register(registerAuthDto: RegisterAuthDto) {
-    const { email, confirmPassword, password } = registerAuthDto;
+    const { name, email, confirmPassword, password } = registerAuthDto;
     const existingUser = await this.prisma.user.findFirst({ 
       where: { email, status: 'ACTIVE' }
     });
@@ -45,6 +45,7 @@ export class AuthService {
       // บันทึกข้อมูลผู้ใช้ลงฐานข้อมูล (สถานะจะเป็น PENDING โดยอัตโนมัติตาม schema)
       const newUser = await this.prisma.user.create({
         data: {
+          name: name,
           email: email,
           password: hashedPassword,
           verificationToken: verificationToken,
@@ -57,21 +58,22 @@ export class AuthService {
       // return tokens;
 
       // ส่งอีเมลลิงก์ยืนยันตัวตนออกไปหาผู้ใช้
-      const verificationUrl = `http://localhost:3000/auth/verify?token=${verificationToken}`;
+      const verificationUrl = `http://localhost:4200/verifyEmail?token=${verificationToken}`;
       
       await this.mailerService.sendMail({
         to: newUser.email,
-        subject: 'ยืนยันอีเมลของคุณสำหรับใช้งาน TaskFlow',
+        subject: 'Verify Your Email Address for TaskFlow',
         html: `
-          <div style="font-family: sans-serif; padding: 20px; color: #333;">
-            <h2>ยินดีต้อนรับสู่ TaskFlow!</h2>
-            <p>กรุณากดปุ่มด้านล่างนี้เพื่อทำการยืนยันอีเมลและเปิดใช้งานบัญชีของคุณ (ลิงก์นี้มีอายุ 1 ชั่วโมง):</p>
-            <div style="margin: 20px 0;">
-              <a href="${verificationUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; rounded: 8px; font-weight: bold;">
-                🔗 คลิกที่นี่เพื่อยืนยันอีเมล
+          <div style="font-family: sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+            <h2>Welcome to TaskFlow!</h2>
+            <p>Thank you for signing up. Please click the button below to verify your email address and activate your account (This link will expire in 1 hour):</p>
+            <div style="margin: 25px 0;">
+              <a href="${verificationUrl}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                🔗 Verify Email Address
               </a>
             </div>
-            <p style="font-size: 12px; color: #666;">หากปุ่มกดไม่ได้ สามารถก๊อปปี้ลิงก์นี้ไปวางที่บราวเซอร์ได้โดยตรง: ${verificationUrl}</p>
+            <p style="font-size: 12px; color: #666; margin-top: 30px;">If the button above doesn't work, copy and paste the following URL into your web browser:</p>
+            <p style="font-size: 12px; color: #4f46e5; word-break: break-all;">${verificationUrl}</p>
           </div>
         `,
       });

@@ -13,7 +13,6 @@ import {
   heroUser 
 } from '@ng-icons/heroicons/outline';
 
-
 @NgModule({
   imports: [
     CommonModule,
@@ -21,7 +20,7 @@ import {
     FormsModule,
     RouterOutlet,
     NgIconComponent,
-    RouterLink
+    RouterLink,
   ],
   exports: [
     CommonModule,
@@ -29,7 +28,7 @@ import {
     FormsModule,
     RouterOutlet,
     NgIconComponent,
-    RouterLink
+    RouterLink,
   ],
   providers: [
     provideIcons({

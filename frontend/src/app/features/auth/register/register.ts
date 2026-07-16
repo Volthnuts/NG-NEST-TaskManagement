@@ -1,54 +1,83 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { SharedModule } from '../../../shared/shared-modules';
-import { ApiService } from '../../../core/services/api.service'; // 💡 อย่าลืมอิมพอร์ต ApiService ของเราเข้ามาครับ
+import { ApiService } from '../../../core/services/api.service';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms'; // 💡 เพิ่มอิมพอร์ต AbstractControl, ValidationErrors
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-register',
-  standalone: true, // มั่นใจว่าเปิดใช้งานเป็น Standalone Component เรียบร้อย
-  imports: [
-    SharedModule
-  ],
+  imports: [SharedModule],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
-export class Register {
-  // 💡 1. ประกาศตัวแปรสลับหน้าจอสถานะ
+export class Register implements OnInit {
   isRegisteredSuccess = false;
+  registerForm!: FormGroup;
+  isLoading = false;
 
-  // 💡 2. ประกาศตัวแปรสำหรับผอม (Two-way Data Binding กับ [(ngModel)] ใน HTML)
-  email = '';
-  password = '';
-  confirmPassword = '';
+  constructor(
+    private router: Router,
+    private apiService: ApiService,
+    private cdr: ChangeDetectorRef,
+    private fb: FormBuilder
+  ) {}
 
-  // 💡 3. ฉีด ApiService เข้ามาทาง Constructor เพื่อให้เรียกใช้พ่นข้อมูลได้
-  constructor(private apiService: ApiService) {}
+  ngOnInit(): void {
+    this.registerForm = this.fb.group({
+      name: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]],
+      terms: [false, [Validators.requiredTrue]]
+    }, {
+      // 🎯 แก้ไขจุดที่ 1: ผูก .bind(this) เข้าไป เพื่อไม่ให้ context ของ class หลุดหายเวลา Validator ทำงาน
+      validators: this.passwordMatchValidator.bind(this) 
+    });
+  }
+
+  // 🎯 แก้ไขจุดที่ 2: เปลี่ยนสไตล์ Type ให้เป็นสากลตามสเปกของ Angular (AbstractControl)
+  passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const form = control as FormGroup;
+    const password = form.get('password')?.value;
+    const confirmPassword = form.get('confirmPassword')?.value;
+    
+    // เคลียร์ error เก่าออกก่อน ถ้าหากรอบนี้พิมพ์ตรงกันแล้ว
+    const confirmPasswordControl = form.get('confirmPassword');
+    if (confirmPasswordControl?.errors?.['passwordMismatch']) {
+      confirmPasswordControl.setErrors(null);
+    }
+
+    if (password !== confirmPassword) {
+      confirmPasswordControl?.setErrors({ passwordMismatch: true });
+      return { passwordMismatch: true };
+    }
+    return null;
+  }
 
   onRegister() {
-    // เช็กเบื้องต้นก่อนส่งข้อมูล (Optional แต่ใส่ไว้ปลอดภัยดีครับ)
-    if (!this.email || !this.password || !this.confirmPassword) {
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+    if (this.registerForm.invalid) {
+      this.registerForm.markAllAsTouched();
       return;
     }
 
-    if (this.password !== this.confirmPassword) {
-      alert('รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน');
-      return;
-    }
-
-    const registerData = { 
-      email: this.email, 
-      password: this.password, 
-      confirmPassword: this.confirmPassword 
-    };
+    this.isLoading = true;
     
+    const { name, email, password, confirmPassword } = this.registerForm.value;
+    const registerData = { name, email, password, confirmPassword };
+    
+    console.log('data : ', registerData);
+
     this.apiService.post<any>('/auth/register', registerData).subscribe({
       next: (res) => {
-        // 💡 เปลี่ยนสถานะแทนการเปลี่ยนหน้า เพื่อให้ HTML โชว์ข้อความแนะนำให้ไปเปิดดูอีเมล
+        // รอบนี้ทำงานได้อย่างปลอดภัย ไม่ค้างแล้วครับ 🎉
+        this.isLoading = false;        
         this.isRegisteredSuccess = true; 
+        this.cdr.detectChanges(); 
       },
       error: (err) => {
-        // ดักเอา Message แย่ๆ ที่ส่งมาจาก NestJS ดัก BadRequestException / ConflictException โชว์ให้ผู้ใช้เห็น
-        alert(err.error?.message || 'การสมัครสมาชิกผิดพลาด');
+        this.isLoading = false;
+        this.cdr.detectChanges(); // ใส่เพิ่มตรงนี้ด้วย เผื่อกรณี Error แล้ว UI ไม่ยอมหยุดหมุน
+        alert(err.error?.message || 'Register failed');
       }
     });
   }

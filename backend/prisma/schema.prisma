@@ -48,7 +48,7 @@ model User {
   id            String          @id @default(uuid())
   email         String          @unique
   password      String
-  name          String?
+  name          String
   avatarUrl     String?
   refreshToken  String?         // ใช้เก็บ Refresh Token สำหรับการทำระบบล็อกอินแบบมี Session (ถ้าใช้ JWT แบบไม่เก็บ Session อาจจะไม่ต้องใช้ฟิลด์นี้)
   verificationToken String?  // 💡 เก็บ Token สำหรับส่งไปในอีเมล
@@ -113,6 +113,9 @@ model ProjectMember {
   
   // บทบาท: ใช้แบ่งว่าใครเป็นเจ้าของ (OWNER) หรือคนช่วยงาน (MEMBER)
   role      ProjectRole @default(OWNER)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   // ป้องกันการแอด User คนเดิมซ้ำเข้าไปในโปรเจกต์เดิม (Unique Compound Key)
   // เมื่อเราเขียน @@unique([ฟิลด์ A, ฟิลด์ B]) Prisma จะเข้าใจว่า "สองคอลัมน์นี้ห้ามซ้ำกันนะ" 

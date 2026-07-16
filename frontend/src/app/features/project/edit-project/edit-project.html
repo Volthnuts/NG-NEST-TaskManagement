@@ -1,5 +1,7 @@
-<div class="max-w-3xl mx-auto space-y-8 animate-fade-in">
+<div class="max-w-3xl mx-auto space-y-8 animate-fade-in relative min-h-100">
   
+  <app-loading-page [isLoading]="isLoading" text="Loading project settings..."></app-loading-page>
+
   <div class="flex items-center gap-4">
     <button 
       (click)="onCancel()"
@@ -15,24 +17,29 @@
     </div>
   </div>
 
-  <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-gray-100 dark:border-zinc-700/50 shadow-sm overflow-hidden">
+  <div *ngIf="!isLoading" class="bg-white dark:bg-zinc-800 rounded-2xl border border-gray-100 dark:border-zinc-700/50 shadow-sm overflow-hidden">
     <div class="p-6 border-b border-gray-50 dark:border-zinc-700/50">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-zinc-100">General Information</h2>
     </div>
     
-    <form (ngSubmit)="onSave()" class="p-6 space-y-6">
+    <form [formGroup]="editProjectForm" (ngSubmit)="onSubmit()" class="p-6 space-y-6">
+      
       <div>
         <label class="block text-sm font-medium mb-2 text-gray-600 dark:text-zinc-400">
           Project Name <span class="text-red-500">*</span>
         </label>
         <input 
           type="text" 
-          name="projectName"
-          [(ngModel)]="projectName"
-          required
-          class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-white text-gray-950 border-gray-200 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-indigo-500/50" 
+          formControlName="projectName" 
+          class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-white 
+          text-gray-950 border-gray-200 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 
+          dark:border-zinc-700 dark:focus:ring-indigo-500/50
+          disabled:opacity-80 disabled:bg-gray-50 dark:disabled:bg-zinc-900/40" 
           placeholder="e.g. Marketing Team" 
         />
+        <p *ngIf="editProjectForm.get('projectName')?.touched && editProjectForm.get('projectName')?.invalid" class="text-xs text-rose-500 mt-2">
+          * Project name is required.
+        </p>
       </div>
 
       <div>
@@ -40,15 +47,17 @@
           Description
         </label>
         <textarea 
-          name="projectDescription"
-          [(ngModel)]="projectDescription"
+          formControlName="projectDescription"
           rows="4"
-          class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-white text-gray-950 border-gray-200 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-indigo-500/50 resize-none" 
+          class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-white 
+          text-gray-950 border-gray-200 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 
+          dark:border-zinc-700 dark:focus:ring-indigo-500/50 resize-none 
+          disabled:opacity-80 disabled:bg-gray-50 dark:disabled:bg-zinc-900/40" 
           placeholder="Describe your workspace..."
         ></textarea>
       </div>
 
-      <div class="flex items-center justify-end gap-3 pt-4">
+      <div *ngIf="isOwner" class="flex items-center justify-end gap-3 pt-4">
         <button 
           type="button"
           (click)="onCancel()"
@@ -56,10 +65,12 @@
         >
           Cancel
         </button>
+        
         <button 
           type="submit"
-          [disabled]="!projectName.trim()"
-          class="px-6 py-2.5 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all shadow-md dark:bg-indigo-500 dark:hover:bg-indigo-600 active:scale-98"
+          [disabled]="editProjectForm.invalid"
+          class="px-6 py-2.5 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer transition-all shadow-md dark:bg-indigo-500 dark:hover:bg-indigo-600 active:scale-98
+                 disabled:opacity-50 disabled:bg-gray-400 dark:disabled:bg-zinc-700 disabled:pointer-events-none disabled:shadow-none"
         >
           Save Changes
         </button>
@@ -67,7 +78,7 @@
     </form>
   </div>
 
-  <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm overflow-hidden">
+  <div *ngIf="!isLoading && isOwner" class="bg-white dark:bg-zinc-800 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm overflow-hidden">
     <div class="p-6 border-b border-red-50 dark:border-red-900/20 bg-red-50/30 dark:bg-red-500/5">
       <h2 class="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h2>
     </div>

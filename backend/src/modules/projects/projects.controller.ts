@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Put, Query } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -38,7 +38,7 @@ export class ProjectsController {
 
   @Roles('OWNER')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Patch(':projectId')
+  @Put(':projectId')
   updateProject(
     @Param('projectId') projectId: string, 
     @Body() updateProjectDto: UpdateProjectDto) {
@@ -58,8 +58,15 @@ export class ProjectsController {
   @Get(':projectId/users')
   allUsers(
     @Param('projectId') projectId: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
   ) {
-    return this.projectsService.allUsers(projectId);
+    // แปลงค่า string จาก query ให้เป็นตัวเลขสำหรับทำคณิตศาสตร์ของ DB
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
+    return this.projectsService.allUsers(projectId, skip, take, search);
   }
 
   @Roles('OWNER', 'MEMBER')
@@ -73,21 +80,35 @@ export class ProjectsController {
 
   @Roles('OWNER')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Post('add-member')
+  @Post(':projectId/add-member')
   addMember(
-    @Body() memberId: string, 
-    @Body() projectId: string,
+      @Param('projectId') projectId: string,
+      @Body('memberId') memberId: string
   ) {
-    return this.projectsService.addMember(memberId, projectId);
+    return this.projectsService.addMember(memberId,projectId);
   }
 
   @Roles('OWNER')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Post(':projectId/delete-member')
+  @Delete(':projectId/delete-member/:memberId')
   deleteMember(
     @Param('projectId') projectId: string,
-    @Body() memberId: string
+    @Param('memberId') memberId: string
   ) {
     return this.projectsService.deleteMember(memberId, projectId);
+  }
+
+  @Roles('OWNER')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Put(':projectId/change-owner')
+  changeOwner(
+    @Param('projectId') projectId: string,
+    @Body() body: { 
+      memberId: string; 
+      ownerId: string 
+    }
+  ) {
+    const { ownerId, memberId } = body;
+    return this.projectsService.changeOwner(ownerId, memberId, projectId);
   }
 }

@@ -9,7 +9,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    // 💡 ลงทะเบียนเพื่อให้ทุกการยิง HTTP ผ่าน Interceptor ตัวนี้เพื่อตรวจจับคุกกี้และ Error 401
+    // ลงทะเบียนเพื่อให้ทุกการยิง HTTP ผ่าน Interceptor ตัวนี้เพื่อตรวจจับคุกกี้และ Error 401
     provideHttpClient(
       withInterceptors([jwtInterceptor])
     )

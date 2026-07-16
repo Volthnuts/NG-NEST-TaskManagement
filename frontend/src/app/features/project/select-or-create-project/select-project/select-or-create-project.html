@@ -1,4 +1,6 @@
-<div *ngIf="currentView === 'LIST'" class="min-h-screen rounded-2xl shadow-xl bg-gray-50 dark:bg-zinc-900 flex items-center justify-center p-6 transition-colors duration-300">
+<div *ngIf="currentView === 'LIST'" class="min-h-screen rounded-2xl bg-none flex items-center justify-center p-6 transition-colors duration-300">
+  <app-loading-page [isLoading]="isLoading" text="Loading projects list..."></app-loading-page>
+
   <div class="w-full max-w-4xl">
     
     <div class="text-center mb-10">

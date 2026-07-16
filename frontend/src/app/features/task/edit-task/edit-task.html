@@ -1,5 +1,7 @@
 <div class="max-w-3xl mx-auto space-y-6 animate-fade-in">
   
+  <app-loading-page [isLoading]="isLoading" text="Loading task data..."></app-loading-page>
+  
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-4">
       <button (click)="goBack()" class="p-2.5 rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 cursor-pointer dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-400">
@@ -21,70 +23,140 @@
       [ngClass]="isEditMode ? 'bg-gray-100 text-gray-700 dark:bg-zinc-700 dark:text-zinc-200' : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400'"
       class="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all active:scale-95"
     >
-      {{ isEditMode ? 'Cancel Edit' : '✍️ Edit Task' }}
+      {{ isEditMode ? 'Cancel Edit' : 'Edit Task' }}
     </button>
   </div>
 
   <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-gray-100 dark:border-zinc-700/50 shadow-sm p-6">
-    <form (ngSubmit)="onSubmit()" class="space-y-5">
+    <form [formGroup]="editTaskForm" (ngSubmit)="onSubmit()" class="space-y-5">
       
-      <div>
-        <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Task Title</label>
-        <input 
-          type="text" name="title" [(ngModel)]="task.title" 
-          [disabled]="!isEditMode"
-          class="w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 bg-white text-gray-950 border-gray-200 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 disabled:opacity-80 disabled:bg-gray-50 dark:disabled:bg-zinc-900/40" 
-        />
-      </div>
+      <div *ngIf="editTaskForm.value" class="space-y-6">
 
-      <div>
-        <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Description</label>
-        <textarea 
-          name="description" [(ngModel)]="task.description" rows="4"
-          [disabled]="!isEditMode"
-          class="w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 bg-white text-gray-950 border-gray-200 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 resize-none disabled:opacity-80 disabled:bg-gray-50 dark:disabled:bg-zinc-900/40"
-        ></textarea>
-      </div>
+        <div >
+          <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Task Title</label>
+          <input 
+            type="text" 
+            formControlName="title"
+            class="w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 bg-white text-gray-950 border-gray-200 
+            focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 disabled:opacity-80 
+            disabled:bg-gray-50 dark:disabled:bg-zinc-900/40" 
+          />
+          <p *ngIf="editTaskForm.get('title')?.touched && editTaskForm.get('title')?.invalid" class="text-xs text-rose-500 mt-1.5">
+          * Task title is required.
+        </p>
+        </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Status</label>
-          <select name="status" [(ngModel)]="task.status" [disabled]="!isEditMode" class="w-full px-4 py-2.5 rounded-xl border bg-white text-gray-950 border-gray-200 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 disabled:opacity-80">
-            <option value="OPEN">Open</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="DONE">Done</option>
-          </select>
+          <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Description</label>
+          <textarea  
+            formControlName="description"
+            rows="4"
+            class="w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 bg-white text-gray-950 
+            border-gray-200 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 resize-none 
+            disabled:opacity-80 disabled:bg-gray-50 dark:disabled:bg-zinc-900/40"
+          ></textarea>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Priority</label>
-          <select name="priority" [(ngModel)]="task.priority" [disabled]="!isEditMode" class="w-full px-4 py-2.5 rounded-xl border bg-white text-gray-950 border-gray-200 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 disabled:opacity-80">
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-            <option value="URGENT">Urgent</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Due Date</label>
-          <input type="date" name="dueDate" [(ngModel)]="task.dueDate" [disabled]="!isEditMode" class="w-full px-4 py-2.5 rounded-xl border bg-white text-gray-950 border-gray-200 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 disabled:opacity-80" />
-        </div>
-      </div>
 
-      <div class="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-zinc-700/50">
-        <button 
-          *ngIf="hasPermission"
-          type="button" (click)="onDelete()" 
-          class="px-4 py-2.5 rounded-xl font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-sm cursor-pointer"
-        >
-          Delete Task
-        </button>
-        <span *ngIf="!hasPermission"></span> <div class="flex gap-2" *ngIf="isEditMode">
-          <button type="submit" [disabled]="!task.title.trim()" class="px-6 py-2.5 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 shadow-md transition-all active:scale-98 text-sm cursor-pointer">
-            Save Changes
+        <div> 
+          <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Assignee</label>
+
+          <div class="relative"> 
+            <select 
+              formControlName="assigneeId" 
+              class="w-full pl-4 pr-12 py-2.5 rounded-xl border bg-white text-gray-950 border-gray-200 
+              focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 
+              cursor-pointer appearance-none disabled:opacity-80 disabled:bg-gray-50 dark:disabled:bg-zinc-900/40" 
+            >
+              <option value="">Unassigned</option>
+              
+              <option *ngFor="let user of assignee" [value]="user.id">
+                {{ user.name }}
+              </option>
+            </select>
+
+            <div class="pointer-events-none absolute inset-y-0 right-5 flex items-center text-gray-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Status</label>
+            <div class="relative"> 
+              <select 
+                formControlName="status"
+                class="w-full px-4 py-2.5 rounded-xl border bg-white text-gray-950 border-gray-200 appearance-none
+                focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 disabled:opacity-80">
+                <option value="OPEN">Open</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="DONE">Done</option>
+              </select>
+
+              <div class="pointer-events-none absolute inset-y-0 right-5 flex items-center text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Priority</label>
+            <div class="relative"> 
+              <select 
+                formControlName="priority" 
+                class="w-full px-4 py-2.5 rounded-xl border bg-white text-gray-950 border-gray-200 appearance-none
+                focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 disabled:opacity-80">
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+              </select>
+
+              <div class="pointer-events-none absolute inset-y-0 right-5 flex items-center text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">Due Date</label>
+            <input 
+              type="date"
+              formControlName="dueDate" 
+              class="w-full px-4 py-2.5 rounded-xl border bg-white text-gray-950 border-gray-200 focus:outline-none 
+              focus:ring-2 focus:ring-indigo-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700" 
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-zinc-700/50">
+          <button 
+            *ngIf="hasPermission && canDelete"
+            type="button" (click)="onDelete()" 
+            class="px-4 py-2.5 rounded-xl font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-sm cursor-pointer"
+          >
+            Delete Task
           </button>
+          <span *ngIf="!hasPermission"></span> 
+          <div class="flex gap-2" *ngIf="isEditMode">
+            <button type="submit" [disabled]="!editTaskForm.value.title.trim() || editTaskForm.invalid" 
+              class="px-6 py-2.5 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 
+              shadow-md transition-all active:scale-98 text-sm cursor-pointer
+              disabled:opacity-50 disabled:bg-gray-400 dark:disabled:bg-zinc-700 disabled:pointer-events-none disabled:shadow-none">
+              Save Changes
+            </button>
+          </div>
         </div>
+
       </div>
 
     </form>
   </div>
+
 </div>

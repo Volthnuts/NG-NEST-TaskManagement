@@ -1,91 +1,147 @@
-<div class="w-full max-w-xl p-10 rounded-2xl shadow-xl transition-colors duration-300
-            bg-white dark:bg-zinc-800">
+<div class="w-full max-w-xl p-10 rounded-2xl shadow-xl transition-colors duration-300 bg-white dark:bg-zinc-800">
   
-  <h2 class="text-3xl font-extrabold text-center mb-8
-             text-gray-900 dark:text-zinc-50">
-    Create your account
-  </h2>
-
-  <form class="space-y-5">
-    
-    <div>
-      <label class="block text-sm font-medium mb-1.5
-                    text-gray-600 dark:text-zinc-400">
-        Full Name
-      </label>
-      <input type="text" 
-             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all
-                    bg-white text-gray-950 border-gray-300 focus:ring-blue-500
-                    dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
-             placeholder="John Doe" />
+  <div *ngIf="isRegisteredSuccess" class="text-center space-y-4 py-6 animate-fade-in">
+    <div class="h-16 w-16 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto text-3xl">
+      ✉️
     </div>
-
-    <div>
-      <label class="block text-sm font-medium mb-1.5
-                    text-gray-600 dark:text-zinc-400">
-        Email address
-      </label>
-      <input type="email" 
-             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all
-                    bg-white text-gray-950 border-gray-300 focus:ring-blue-500
-                    dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
-             placeholder="you@example.com" />
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-zinc-50">Registration Successful!</h2>
+    <p class="text-sm text-gray-500 dark:text-zinc-400 leading-relaxed">
+      We have sent a verification link to your email address. Please click the link within 1 hour to activate your account.
+    </p>
+    <div class="pt-4">
+      <a routerLink="/login" class="inline-block text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+        <!-- เปลี่ยนเครื่องหมายลูกศรให้เป็น text-safe สำหรับ XML Parser ของ Angular -->
+        &larr; Back to Sign In
+      </a>
     </div>
+  </div>
 
-    <div>
-      <label class="block text-sm font-medium mb-1.5
-                    text-gray-600 dark:text-zinc-400">
-        Password
-      </label>
-      <input type="password" 
-             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all
-                    bg-white text-gray-950 border-gray-300 focus:ring-blue-500
-                    dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
-             placeholder="••••••••" />
-    </div>
+  <div *ngIf="!isRegisteredSuccess">
+    <h2 class="text-3xl font-extrabold text-center mb-8 text-gray-900 dark:text-zinc-50">
+      Create your account
+    </h2>
 
-    <div>
-      <label class="block text-sm font-medium mb-1.5
-                    text-gray-600 dark:text-zinc-400">
-        Confirm Password
-      </label>
-      <input type="password" 
-             class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all
-                    bg-white text-gray-950 border-gray-300 focus:ring-blue-500
-                    dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
-             placeholder="••••••••" />
-    </div>
-
-    <div class="flex items-start text-sm">
-      <div class="flex items-center h-5">
-        <input id="terms" 
-               name="terms" 
-               type="checkbox" 
-               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer
-                      dark:border-zinc-600 dark:bg-zinc-900 dark:focus:ring-indigo-500">
+    <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="space-y-5">
+      
+      <div>
+        <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">
+          Name
+        </label>
+        <input type="text" 
+               formControlName="name" 
+               class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all bg-white text-gray-950 border-gray-300 focus:ring-blue-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
+               placeholder="John Doe" />
+        <p *ngIf="registerForm.get('name')?.touched && registerForm.get('name')?.errors?.['required']" class="text-xs text-rose-500 mt-1">
+          * Name is required.
+        </p>
       </div>
-      <label for="terms" 
-             class="ml-2 block text-gray-600 dark:text-zinc-400 cursor-pointer select-none">
-        I agree to the <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Terms of Service</a> and <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Privacy Policy</a>
-      </label>
-    </div>
 
-    <button type="submit" 
-            class="w-full py-3 px-4 rounded-lg font-semibold text-white cursor-pointer transition-all duration-150 active:scale-98 shadow-md mt-2
-                   bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200
-                   dark:bg-indigo-500 dark:hover:bg-indigo-600 dark:hover:shadow-none">
-      Create Account
-    </button>
+      <div>
+        <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">
+          Email address
+        </label>
+        <input type="email" 
+               formControlName="email" 
+               class="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all bg-white text-gray-950 border-gray-300 focus:ring-blue-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
+               placeholder="you@example.com" />
+        <p *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['email']" class="text-xs text-rose-500 mt-1">
+          * Please enter a valid email address.
+        </p>
+        <p *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['required']" class="text-xs text-rose-500 mt-1">
+          * Email is required.
+        </p>
+      </div>
 
-    <div class="text-center pt-2">
-      <p class="text-sm text-gray-500 dark:text-zinc-400">
-        Already have an account? 
-        <a routerLink="/login" 
-           class="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors ml-1">
-          Sign In here
-        </a>
+      <!-- ช่อง Password พร้อมปุ่มตา -->
+      <div>
+        <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">
+          Password
+        </label>
+        <!-- 🎯 ครอบด้วย relative และสร้างตัวแปรอิสระชื่อ #showPwd ไว้สลับสเตตสถานะตรงนี้เลย -->
+        <div class="relative flex items-center" #pwdContainer>
+          <input [type]="pwdContainer.getAttribute('data-show') === 'true' ? 'text' : 'password'" 
+                 formControlName="password"
+                 class="w-full pl-4 pr-12 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all bg-white text-gray-950 border-gray-300 focus:ring-blue-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
+                 placeholder="••••••••" />
+          
+          <button type="button" 
+                  (click)="pwdContainer.setAttribute('data-show', pwdContainer.getAttribute('data-show') === 'true' ? 'false' : 'true')"
+                  class="absolute right-3 p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer focus:outline-none transition-colors">
+            <svg *ngIf="pwdContainer.getAttribute('data-show') !== 'true'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <svg *ngIf="pwdContainer.getAttribute('data-show') === 'true'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          </button>
+        </div>
+        <p *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['minlength']" class="text-xs text-rose-500 mt-1">
+          * Password must be at least 6 characters long.
+        </p>
+      </div>
+
+      <!-- ช่อง Confirm Password พร้อมปุ่มตา -->
+      <div>
+        <label class="block text-sm font-medium mb-1.5 text-gray-600 dark:text-zinc-400">
+          Confirm Password
+        </label>
+        <!-- 🎯 สร้างตัวแปรแยกต่างหากชื่อ #confirmPwdContainer จะได้ไม่ตีกันกับช่องแรก -->
+        <div class="relative flex items-center" #confirmPwdContainer>
+          <input [type]="confirmPwdContainer.getAttribute('data-show') === 'true' ? 'text' : 'password'" 
+                 formControlName="confirmPassword"
+                 class="w-full pl-4 pr-12 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-all bg-white text-gray-950 border-gray-300 focus:ring-blue-500 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-blue-500" 
+                 placeholder="••••••••" />
+          
+          <button type="button" 
+                  (click)="confirmPwdContainer.setAttribute('data-show', confirmPwdContainer.getAttribute('data-show') === 'true' ? 'false' : 'true')"
+                  class="absolute right-3 p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 cursor-pointer focus:outline-none transition-colors">
+            <svg *ngIf="confirmPwdContainer.getAttribute('data-show') !== 'true'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <svg *ngIf="confirmPwdContainer.getAttribute('data-show') === 'true'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          </button>
+        </div>
+        <p *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['passwordMismatch']" class="text-xs text-rose-500 mt-1">
+          * Passwords do not match.
+        </p>
+      </div>
+
+      <div class="flex items-start text-sm">
+        <div class="flex items-center h-5">
+          <input id="terms" 
+                 name="terms" 
+                 type="checkbox" 
+                 formControlName="terms"
+                 class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer dark:border-zinc-600 dark:bg-zinc-900 dark:focus:ring-indigo-500">
+        </div>
+        <label for="terms" class="ml-2 block text-gray-600 dark:text-zinc-400 cursor-pointer select-none">
+          I agree to the <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Terms of Service</a> and <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Privacy Policy</a>
+        </label>
+      </div>
+      <p *ngIf="registerForm.get('terms')?.touched && registerForm.get('terms')?.errors?.['required']" class="text-xs text-rose-500">
+        * You must accept the terms and conditions to proceed.
       </p>
-    </div>
 
-  </form>
+      <button type="submit" 
+              [disabled]="registerForm.invalid || isLoading"
+              class="w-full py-3 px-4 rounded-lg font-semibold text-white cursor-pointer transition-all duration-150 active:scale-98 shadow-md mt-2 bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200 dark:bg-indigo-500 dark:hover:bg-indigo-600 dark:hover:shadow-none disabled:opacity-50 disabled:cursor-not-allowed">
+        <span *ngIf="isLoading" class="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+        {{ isLoading ? 'Creating Account...' : 'Create Account' }}
+      </button>
+
+      <div class="text-center pt-2">
+        <p class="text-sm text-gray-500 dark:text-zinc-400">
+          Already have an account? 
+          <a routerLink="/login" class="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors ml-1">
+            Sign In here
+          </a>
+        </p>
+      </div>
+
+    </form>
+  </div>
 </div>

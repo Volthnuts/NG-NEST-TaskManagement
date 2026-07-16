@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Put } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -43,7 +43,7 @@ export class TasksController {
 
   @Roles('OWNER','MEMBER') 
   @UseGuards(JwtAuthGuard,RolesGuard)
-  @Patch(':taskId')
+  @Put(':taskId')
   update(
     @Param('taskId') taskId: string,
     @Req() request: RequestWithUser,

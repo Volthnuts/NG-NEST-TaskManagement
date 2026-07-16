@@ -1,6 +1,7 @@
-<p>project-task-list works!</p>
 <div class="space-y-6 animate-fade-in">
   
+  <app-loading-page [isLoading]="isLoading" text="Loading tasks list..."></app-loading-page>
+
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-zinc-50">Tasks</h1>
@@ -8,7 +9,7 @@
     </div>
     
     <button 
-      (click)="openCreateTaskModal()"
+      (click)="openCreateTask()"
       class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md transition-all active:scale-98 cursor-pointer dark:bg-indigo-500 dark:hover:bg-indigo-600"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,6 +29,7 @@
       <input 
         type="text" 
         [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
         placeholder="Search tasks..." 
         class="w-full pl-9 pr-4 py-2 text-sm rounded-xl border focus:outline-none focus:ring-2 transition-all bg-white text-gray-950 border-gray-200 focus:ring-indigo-500/50 dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-700 dark:focus:ring-indigo-500/50"
       />
@@ -36,7 +38,7 @@
     <div class="flex gap-1.5 overflow-x-auto w-full md:w-auto p-0.5">
       <button 
         *ngFor="let option of ['ALL', 'OPEN', 'IN_PROGRESS', 'DONE']"
-        (click)="statusFilter = option"
+        (click)="statusFilter = option; currentPage = 1;"
         [ngClass]="{
           'bg-gray-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold shadow-sm': statusFilter === option,
           'text-gray-600 hover:bg-gray-100 dark:text-zinc-400 dark:hover:bg-zinc-700/60': statusFilter !== option
@@ -55,16 +57,64 @@
           <tr class="border-b border-gray-100 dark:border-zinc-700/60 bg-gray-50/50 dark:bg-zinc-800/50 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
             <th class="py-3 px-4 w-12 text-center">Status</th>
             <th class="py-3 px-4">Task Title</th>
-            <th class="py-3 px-4 w-32">Priority</th>
-            <th class="py-3 px-4 w-40">Due Date</th>
+            
+            <th class="py-3 px-4 w-32 cursor-pointer hover:text-gray-700 dark:hover:text-zinc-300 transition-colors select-none" (click)="toggleSort('priority')">
+              <div class="flex items-center gap-1">
+                <span>Priority</span>
+                <span class="text-gray-400">
+                  <span *ngIf="sortColumn === 'priority' && sortDirection === 'asc'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 18.75 7.5-7.5 7.5 7.5" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 7.5-7.5 7.5 7.5" />
+                    </svg>
+                  </span>
+                  <span *ngIf="sortColumn === 'priority' && sortDirection === 'desc'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5" />
+                    </svg>
+                  </span>
+                  <span *ngIf="sortColumn !== 'priority'" class="opacity-30">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                    </svg>
+                  </span>
+                </span>
+              </div>
+            </th>
+            
+            <th class="py-3 px-4 w-40 cursor-pointer hover:text-gray-700 dark:hover:text-zinc-300 transition-colors select-none" (click)="toggleSort('dueDate')">
+              <div class="flex items-center gap-1">
+                <span>Due Date</span>
+                <span class="text-gray-400">
+                  <span *ngIf="sortColumn === 'dueDate' && sortDirection === 'asc'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 18.75 7.5-7.5 7.5 7.5" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 7.5-7.5 7.5 7.5" />
+                    </svg>
+                  </span>
+                  <span *ngIf="sortColumn === 'dueDate' && sortDirection === 'desc'">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5" />
+                    </svg>
+                  </span>
+                  <span *ngIf="sortColumn !== 'dueDate'" class="opacity-30">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                    </svg>
+                  </span>
+                </span>
+              </div>
+            </th>
+            
             <th class="py-3 px-4 w-44">Assignee</th>
+            <th class="py-3 px-4 w-44">Creator</th>
             <th class="py-3 px-4 w-16 text-center"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-zinc-700/40 text-sm">
           
           <tr *ngIf="filteredTasks.length === 0">
-            <td colspan="6" class="py-12 text-center text-gray-400 dark:text-zinc-500 font-medium">
+            <td colspan="7" class="py-12 text-center text-gray-400 dark:text-zinc-500 font-medium">
               No tasks found matching your criteria.
             </td>
           </tr>
@@ -86,7 +136,7 @@
             </td>
 
             <td class="py-4 px-4">
-              <div class="font-semibold text-gray-800 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" [ngClass]="{'line-through !text-gray-400 dark:!text-zinc-500 font-normal': task.status === 'DONE'}">
+              <div class="font-semibold text-gray-800 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" [ngClass]="{'line-through text-gray-400! dark:text-zinc-500! font-normal': task.status === 'DONE'}">
                 {{ task.title }}
               </div>
               <div class="text-xs text-gray-400 dark:text-zinc-500 line-clamp-1 mt-0.5 max-w-md" [ngClass]="{'line-through': task.status === 'DONE'}">
@@ -121,17 +171,21 @@
               </ng-template>
             </td>
 
+            <td class="py-4 px-4">
+              <div class="flex items-center gap-2">
+                <div class="h-6 w-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30">
+                  {{ task.createdBy.name.charAt(0) }}
+                </div>
+                <span class="text-xs font-medium text-gray-600 dark:text-zinc-300">{{ task.createdBy.name }}</span>
+              </div>
+            </td>
+
             <td class="py-4 px-4 text-center">
               <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button (click)="editTask(task.id)" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                  </svg>
-                </button>
-                <button (click)="deleteTask(task.id)" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-zinc-700 text-gray-400 hover:text-red-500 dark:hover:text-red-400 cursor-pointer transition-colors">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                   </svg>
                 </button>
               </div>
@@ -141,6 +195,40 @@
         </tbody>
       </table>
     </div>
-  </div>
 
+    <div *ngIf="totalItems > 0" class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 dark:border-zinc-700/60 bg-gray-50/30 dark:bg-zinc-800/20 text-xs text-gray-500 dark:text-zinc-400">
+      <div>
+        Showing <span class="font-semibold text-gray-700 dark:text-zinc-300">{{ (currentPage - 1) * pageSize + 1 }}</span> to 
+        <span class="font-semibold text-gray-700 dark:text-zinc-300">{{ Math.min(currentPage * pageSize, totalItems) }}</span> of 
+        <span class="font-semibold text-gray-700 dark:text-zinc-300">{{ totalItems }}</span> tasks
+      </div>
+      
+      <div class="flex items-center gap-1.5">
+        <button 
+          (click)="changePage(currentPage - 1)" 
+          [disabled]="currentPage === 1"
+          class="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700/70 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18" />
+          </svg>
+        </button>
+        
+        <span class="px-3 py-1 bg-gray-100 dark:bg-zinc-700 rounded-lg font-medium text-gray-700 dark:text-zinc-300">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+
+        <button 
+          (click)="changePage(currentPage + 1)" 
+          [disabled]="currentPage === totalPages"
+          class="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700/70 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
 </div>

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFile, Put } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth/jwt-auth.guard';
@@ -11,16 +11,20 @@ import { Multer } from 'multer';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // ต้องเอา static route ขึ้นก่อนเสมอ เดี๋ยวจะ catch
+  @UseGuards(JwtAuthGuard)
+  @Get('my-profile')
+  getProfile(
+    @Req() request: RequestWithUser) 
+  {
+    return this.usersService.findOne(request.user.userId);
+  }
+
+  // เอา Dynamic Parameter route ไว้ทีหลัง
   @UseGuards(JwtAuthGuard)
   @Get(':userId')
   findOne(@Param('userId') userId: string) {
     return this.usersService.findOne(userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('my-profile')
-  getProfile(@Req() request: RequestWithUser) {
-    return this.usersService.findOne(request.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -30,7 +34,7 @@ export class UsersController {
       destination: './uploads/profile-images', 
     }),
   )
-  @Patch('my-profile')
+  @Put('my-profile')
   update(
     @Req() request: RequestWithUser, 
     @Body() updateUserDto: UpdateUserDto,
@@ -47,18 +51,35 @@ export class UsersController {
   return this.usersService.update(request.user.userId, updateUserDto, imagePath);
   }
 
-  @UseGuards(JwtAuthGuard)
   // ช่องทางรับอีเมลเพื่อยิงลิงก์กู้ภัย
   @Post('forgot-password')
-  async forgotPassword(@Body('email') email: string) {
-    return this.usersService.forgotPassword(email);
+  async forgotPassword(
+    @Body() body: { 
+      email: string
+      resetUrl: string 
+    }
+  ) {
+    const { email, resetUrl } = body;
+    return this.usersService.forgotPassword(email,resetUrl);
   }
 
   // ช่องทางรับรหัสผ่านใหม่พ่วง Token จากหน้าบ้านมาบันทึก
   @Post('reset-password')
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    // แนะนำสร้าง ResetPasswordDto เพิ่มเติม: { token, newPassword, confirmPassword }
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto
+  ) {
     return this.usersService.resetPassword(resetPasswordDto);
+  }
+
+  @Post('change-password')
+  async changePassword(
+    @Body() body: { 
+      email: string
+      resetUrl: string 
+    }
+  ) {
+    const { email, resetUrl } = body;
+    return this.usersService.changePassword(email, resetUrl);
   }
 
   @UseGuards(JwtAuthGuard)

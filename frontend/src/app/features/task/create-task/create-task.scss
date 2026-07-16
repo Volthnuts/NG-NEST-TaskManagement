@@ -1,0 +1,9 @@
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: none;
+
+  // 💡 เช็กว่าถ้าเกิด Element ด้านบนตัวใดตัวหนึ่งมีคลาส .dark ให้สลับสีทันที
+  :host-context(.dark) & {
+    filter: invert(1) !important;
+  }
+}

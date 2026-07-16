@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api.service';
 import { SharedModule } from '../../../shared/shared-modules';
@@ -16,6 +16,9 @@ export class ResetPassword implements OnInit {
   newPassword = '';
   confirmPassword = '';
   
+  showNewPassword = false;
+  showConfirmPassword = false;
+  
   isLoading = false;
   isSuccess = false;
   errorMessage = '';
@@ -23,15 +26,18 @@ export class ResetPassword implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private apiService: ApiService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    // 💡 ดักแกะค่า ?token=xxxx ที่ส่งมาจากปุ่มในอีเมล
+    // ดักแกะค่า ?token=xxxx ที่ส่งมาจากปุ่มในอีเมล
     this.token = this.route.snapshot.queryParamMap.get('token') || '';
     
     if (!this.token) {
-      this.errorMessage = 'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้อง หรือไม่มีรหัสตั๋วแนบมา';
+      this.errorMessage = 'Invalid or missing password reset token.';
+      // บังคับตรวจจับการเปลี่ยนแปลงทันทีตั้งแต่โหลดหน้าจอเสร็จ เพื่อให้กล่องสีแดงขึ้นโชว์โดยไม่ต้องรอคลิก
+      this.cdr.detectChanges();
     }
   }
 
@@ -39,7 +45,8 @@ export class ResetPassword implements OnInit {
     if (!this.newPassword || !this.confirmPassword) return;
 
     if (this.newPassword !== this.confirmPassword) {
-      alert('รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน');
+      this.errorMessage = 'Passwords do not match.';
+      this.cdr.detectChanges();
       return;
     }
 
@@ -51,20 +58,27 @@ export class ResetPassword implements OnInit {
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.detectChanges(); // สั่งให้ปุ่มขึ้นสถานะหมุนโหลดตัวล็อกทันที
 
-    // ⚡ ยิงหา Endpoint รีเซ็ตรหัสผ่านของ NestJS
-    this.apiService.post<{ message: string }>('/auth/reset-password', body).subscribe({
+    // ยิงหา Endpoint รีเซ็ตรหัสผ่านของ NestJS
+    this.apiService.post<any>('/users/reset-password', body).subscribe({
       next: (res) => {
         this.isLoading = false;
         this.isSuccess = true;
-        // หลังจากตั้งรหัสผ่านใหม่สำเร็จ 3 วินาที ให้วาร์ปไปหน้า Login อัตโนมัติ
+        this.cdr.detectChanges();
+        
+        // แก้ไขจาก 5000 เป็น 3000 เพื่อให้วาร์ปไปหน้า Login ภายใน 3 วินาทีตามหน้าจออธิบาย
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 3000);
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.message || 'เปลี่ยนรหัสผ่านไม่สำเร็จ ลิงก์อาจจะหมดอายุแล้ว';
+        // ดึงข้อความ Error ภาษาอังกฤษจากฝั่งหลังบ้าน หรือใช้ Fallback ภาษาอังกฤษที่ระบุไว้
+        this.errorMessage = err.error?.message || 'Failed to reset password. The link may have expired.';
+        
+        // บังคับรีเฟรชหน้าจอทันทีหลังจาก API ตอบกลับมาพัง ข้อความ Error จะได้เด้งขึ้นมาชัดเจน
+        this.cdr.detectChanges();
       }
     });
   }

@@ -53,7 +53,7 @@ export class ProjectsService {
           }
         }
       },
-      // 💡 เปลี่ยนจาก include มารวบทุกอย่างไว้ใน select ระดับนอกสุดแทน
+      // เปลี่ยนจาก include มารวบทุกอย่างไว้ใน select ระดับนอกสุดแทน
       select: {
         id: true,         // ระบุฟิลด์ของ Project ที่ต้องการเอาไปใช้บนหน้า UI
         name: true,
@@ -82,10 +82,23 @@ export class ProjectsService {
     return projects;
   }
 
-  async getOneProject(projectId: string) {
+  async getOneProject(
+    projectId: string,
+  ) {
     const checkProject = await this.prisma.project.findUnique({
       where: {
         id: projectId
+      },
+      include: {
+        members: {
+          select: {
+            userId: true,
+            role: true
+          },
+          where: {
+            role: 'OWNER' // เอาเฉพาะเจ้าของโปรเจกต์เท่านั้น
+          }
+        }
       }
     });
 
@@ -139,11 +152,42 @@ export class ProjectsService {
     };
   }
 
-  async allUsers(projectId: string) {
+  async allUsers(
+    projectId: string,
+    skip: number,
+    take: number,
+    search?: string,
+  ) {
+    // สร้างเงื่อนไขการกรอง (Where Clause)
+    const where: any = {
+      status: 'ACTIVE'
+    };
+
+    // ถ้ามีการพิมพ์ค้นหา ให้เช็กว่าชื่อ หรือ อีเมล ตรงกับที่พิมพ์มาไหม (ไม่สนใจพิมพ์เล็ก-ใหญ่ ด้วย mode: 'insensitive')
+    if (search) {
+      where.OR = [
+        { 
+          name: { 
+            contains: search, 
+            mode: 'insensitive'
+          } 
+        },{ 
+          email: { 
+            contains: search, 
+            mode: 'insensitive' 
+          } 
+        },
+      ];
+    }
+
     const users = await this.prisma.user.findMany({
-      where : {
-        status: 'ACTIVE' // เลือก user ทั้งหมดที่ active
-      },select: {
+      where
+      ,skip: Number(skip) || 0   // เลื่อนหน้า (Offset) สำหรับ Infinite Scroll
+      ,take: Number(take) || 15  // จำกัดจำนวนต่อรอบ (Limit)
+      ,orderBy: { 
+        name: 'asc'  // เรียงลำดับชื่อ
+      } 
+      ,select: {
           id: true,
           name: true,
           email: true,
@@ -190,29 +234,34 @@ export class ProjectsService {
   }
 
   async allMembers(projectId: string) {
-  const users = await this.prisma.user.findMany({
-    where: {
-      status: 'ACTIVE', // กรองเฉพาะคนที่ยัง Active (ถ้าต้องการ)
-      projects: {
-        some: { // some คือ ถ้ามีสักอันที่ตรงตามเงื่อนไข มันจะมี every กับ none ด้วย
-          // every คือ ต้องมีแค่ project นี้อย่างเดียว **ไม่ใช้เพราะ user อยู่หลาย project
-          // none คือ ไม่อยู่ใน project นี้ หรือไม่เกี่ยวข้องเลย **ไม่ได้ใช้อยู่ดี
-          projectId: projectId // ค้นหาใน Relation Table (ProjectMember) ว่าตรงกับ ID นี้ไหม
+    const users = await this.prisma.user.findMany({
+      where: {
+        status: 'ACTIVE', // กรองเฉพาะคนที่ยัง Active (ถ้าต้องการ)
+        projects: {
+          some: { // some คือ ถ้ามีสักอันที่ตรงตามเงื่อนไข มันจะมี every กับ none ด้วย
+            // every คือ ต้องมีแค่ project นี้อย่างเดียว **ไม่ใช้เพราะ user อยู่หลาย project
+            // none คือ ไม่อยู่ใน project นี้ หรือไม่เกี่ยวข้องเลย **ไม่ได้ใช้อยู่ดี
+            projectId: projectId // ค้นหาใน Relation Table (ProjectMember) ว่าตรงกับ ID นี้ไหม
+          }
+        }
+      },select: {
+        id: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+        projects: {
+          select: {
+            createdAt: true,
+            role: true
+          }
         }
       }
-    },select: {
-      id: true,
-      name: true,
-      email: true,
-      avatarUrl: true
-    }
-  });
+    });
 
-  return users; // ได้ Array ของ User สองมิติตามที่ต้องการทันที
-}
+    return users; // ได้ Array ของ User 
+  }
 
   async addMember(memberId: string, projectId: string) {
-    
     // findFirst เพื่อให้กรองสถานะ status: 'ACTIVE' ร่วมกับ id ได้
     const checkMember = await this.prisma.user.findFirst({
       where: {
@@ -231,7 +280,7 @@ export class ProjectsService {
       data: {
         projectId: projectId,
         userId: memberId,
-        role: 'MEMBER', // กำหนดค่าเริ่มต้นเป็นสมาชิกทั่วไป
+        role: "MEMBER"
       },
     });
 
@@ -264,6 +313,48 @@ export class ProjectsService {
 
     return {
       message: `Delete Member ${checkMember.name} Successfully`
+    };
+  }
+
+  async changeOwner(ownerId: string, memberId: string, projectId: string) {
+    const checkMember = await this.prisma.user.findFirst({
+      where: {
+        id: memberId,
+        status: 'ACTIVE',
+      },
+    });
+
+    if (!checkMember) {
+      throw new NotFoundException('User not found or is inactive');
+    }
+
+    const operations = [
+      this.prisma.projectMember.update({
+        where: {
+          projectId_userId: {
+            projectId,
+            userId: ownerId, // ต้องไม่ undefined
+          },
+        },
+        data: { role: 'MEMBER' },
+      }),
+      this.prisma.projectMember.update({
+        where: {
+          projectId_userId: {
+            projectId,
+            userId: memberId,
+          },
+        },
+        data: { role: 'OWNER' },
+      }),
+    ];
+
+    console.log('operation ', operations)
+
+    await this.prisma.$transaction(operations);
+
+    return {
+      message: `Change Project Owner Successfully`
     };
   }
 }
