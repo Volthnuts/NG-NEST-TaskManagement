@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators'; // 1. อิมพอร์ต map เพ�
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'http://localhost:8000/api/v1'; 
+  private baseUrl = 'http://127.0.0.1:8000/api/v1'; 
 
   private defaultOptions = {
     withCredentials: true
